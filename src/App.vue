@@ -11,6 +11,10 @@
             <router-link to="/ready">
               <a-button type="primary">Phone</a-button>
             </router-link>
+            <a-divider type="vertical" />
+            <router-link to="/history">
+              <a-button type="primary">Call History</a-button>
+            </router-link>
           </nav>
         </a-col>
       </a-row>
