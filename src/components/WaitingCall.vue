@@ -233,15 +233,27 @@ export default class WaitingCall extends Vue {
     call.on("disconnect", this.handleIncomingCallDisconnect);
     call.on("reject", this.handleIncomingCallDisconnect);
 
+    this.log("Incoming Call", "processing");
+
     this.setCall(call);
   }
 
   handleIncomingCallDisconnect() {
-    this.log("The call has been disconnected.", "warning");
+    this.openIncomingModal = false;
+    this.openCallInProgressModal = false;
+    try {
+      this.log("The call has been disconnected.", "warning");
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   handleIncomingCallAccept() {
-    this.log("The call has been accepted.", "success");
+    try {
+      this.log("The call has been accepted.", "success");
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   log(message: string, type: TimelineTypes = "default", date = null) {
@@ -314,14 +326,6 @@ export default class WaitingCall extends Vue {
       this.status = "Disconnected";
     });
 
-    this.device.on("connect", (connection) => {
-      console.log("connect", connection);
-    });
-
-    this.device.on("disconnect", (connection) => {
-      console.log("disconnect", connection);
-    });
-
     this.device.on("incoming", this.handleIncomingCall);
 
     try {
@@ -336,7 +340,6 @@ export default class WaitingCall extends Vue {
     this.incomingCall = call;
     this.callParams = call.parameters;
     this.openIncomingModal = true;
-    this.log("Incoming Call", "processing");
     console.log(call);
   };
 
