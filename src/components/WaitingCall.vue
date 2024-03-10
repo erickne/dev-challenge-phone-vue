@@ -1,42 +1,47 @@
 <template>
-  <div>
-    <div v-if="status">
-      <h2>Status:</h2>
-      <pre>{{ status }}</pre>
-    </div>
-    <div v-if="error">
-      <h2>Error:</h2>
-      <p>{{ error }}</p>
-    </div>
-  </div>
+  <a-card>
+    <a-row>
+      <a-col :span="8">
+        <h2>Status:</h2>
+        <pre>{{ status }}</pre>
+      </a-col>
+      <a-col :span="8">
+        <h2>Agent Identity:</h2>
+        <pre>{{ identity || "Unknown" }}</pre>
+      </a-col>
+      <a-col :span="8">
+        <a-button
+          type="primary"
+          @click="deviceConnect"
+          v-if="status !== 'Online'"
+        >
+          Connect
+        </a-button>
+        <a-button type="primary" @click="deviceDisconnect" danger v-else>
+          Disconnect
+        </a-button>
+      </a-col>
+      <a-col :span="24" v-if="error">
+        <h2>Error:</h2>
+        <p>{{ error }}</p>
+      </a-col>
+    </a-row>
+  </a-card>
 
-  <a-row>
-    <a-col :span="12" :offset="6">
-      <a-button
-        type="primary"
-        @click="deviceConnect"
-        v-if="status !== 'Online'"
-      >
-        Connect
-      </a-button>
-      <a-button type="primary" @click="deviceDisconnect" danger v-else>
-        Disconnect
-      </a-button>
-    </a-col>
-  </a-row>
+  <a-row> </a-row>
   <a-divider />
   <a-row>
     <a-col :span="12" :offset="6">
       <a-button type="primary" @click="showIncomingModal"
-        >Show Incoming Modal</a-button
-      >
+        >Show Incoming Modal
+      </a-button>
     </a-col>
   </a-row>
   <a-row>
     <a-col :span="12" :offset="6">
       <a-button type="primary" @click="showInProgressModal"
-        >Show In Progress Modal</a-button
-      >
+        >Show In Progress Modal
+      </a-button>
     </a-col>
   </a-row>
   <div>
@@ -49,51 +54,81 @@
       cancel-text="Reject"
       :cancel-button-props="{ danger: true, type: 'primary' }"
     >
-      <a-typography-title>{{
-        incomingCall?.parameters?.From
-      }}</a-typography-title>
+      <a-typography-title
+        >{{ incomingCall?.parameters?.From || "+PHONE_NUMBER" }}
+      </a-typography-title>
     </a-modal>
     <a-modal
       v-model:open="openCallInProgressModal"
-      title="Attention"
+      title="Call in Progress"
       @ok="handleCallDisconnect"
+      :closable="false"
+      :maskClosable="false"
     >
       <template #footer>
         <a-button key="submit" type="primary" @click="handleCallDisconnect"
-          >Disconnect</a-button
-        >
+          >Disconnect
+        </a-button>
       </template>
-      <a-typography-title>{{
-        incomingCall?.parameters?.From
-      }}</a-typography-title>
-      <a-typography-text>Call in progress</a-typography-text>
+      <a-descriptions bordered :column="1">
+        <a-descriptions-item label="From">
+          {{ incomingCall?.parameters?.From || "+PHONE_NUMBER" }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Duration">
+          {{ timer.formatted }}
+        </a-descriptions-item>
+      </a-descriptions>
+      <a-typography-paragraph></a-typography-paragraph>
     </a-modal>
   </div>
 </template>
 
 <script lang="ts">
+/* eslint-disable */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Vue } from "vue-class-component";
 import axios from "axios";
 import { Call, Device } from "@twilio/voice-sdk";
 import { toRaw } from "vue";
 import _ from "lodash";
 
+interface TimerInterface {
+  hours: number;
+  minutes: number;
+  seconds: number;
+  formatted: string;
+  intervalId: any;
+}
+
+// @Options({
+//   components: {},
+// })
 export default class WaitingCall extends Vue {
   agent = "erickengelhardt";
   error = "";
   status = "Disconnected";
+  identity = "Unknown";
   device?: Device;
   openIncomingModal = false;
   openCallInProgressModal = false;
   incomingCall?: Call | null = null;
   callParams?: any | null = null;
+  timer: TimerInterface = {
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    formatted: `"00:00:00"`,
+    intervalId: null,
+  };
 
   showIncomingModal = () => {
     this.openIncomingModal = true;
   };
 
   showInProgressModal = () => {
+    this.openIncomingModal = false;
     this.openCallInProgressModal = true;
+    this.startTimer();
   };
 
   handleCallAccept = async () => {
@@ -111,26 +146,25 @@ export default class WaitingCall extends Vue {
     } catch (e) {
       console.log(e);
     }
-    this.openIncomingModal = false;
-    this.openCallInProgressModal = true;
+    this.showInProgressModal();
   };
 
   prepareCallInstance = (call?: Call | null): Call => {
     if (!call) {
       console.error("No call to prepare");
     }
-    // let incomingCallCopy = _.cloneDeepWith(this.incomingCall, toRaw);
-    // incomingCallCopy.on("accept", this.handleIncomingCallAccept);
-    // incomingCallCopy.on("cancel", this.handleIncomingCallDisconnect);
-    // incomingCallCopy.on("disconnect", this.handleIncomingCallDisconnect);
-    // incomingCallCopy.on("reject", this.handleIncomingCallDisconnect);
-    // return incomingCallCopy;
-    return call as Call;
+    let incomingCallCopy = _.cloneDeepWith(this.incomingCall, toRaw);
+    incomingCallCopy.on("accept", this.handleIncomingCallAccept);
+    incomingCallCopy.on("cancel", this.handleIncomingCallDisconnect);
+    incomingCallCopy.on("disconnect", this.handleIncomingCallDisconnect);
+    incomingCallCopy.on("reject", this.handleIncomingCallDisconnect);
+    return incomingCallCopy;
+    // return call as Call;
   };
 
   handleCallReject = async () => {
     console.log("Reject Call");
-    const incomingCallCopy = this.prepareCallInstance(this.incomingCall);
+    let incomingCallCopy: Call = this.prepareCallInstance(this.incomingCall);
 
     const callSid = incomingCallCopy?.parameters?.CallSid;
     if (!callSid) {
@@ -150,17 +184,19 @@ export default class WaitingCall extends Vue {
     } catch (e) {
       console.log(e);
     }
+    this.resetTimer();
     this.incomingCall = undefined;
     this.openCallInProgressModal = false;
   };
 
   handleCallDisconnect = () => {
     console.log("Disconnect Call");
+    this.resetTimer();
     // const incomingCallCopy = this.prepareCallInstance(this.incomingCall);
     // this.incomingCallCopy?.reject();
     // this.incomingCallCopy?.disconnect();
     // this.incomingCallCopy = undefined;
-    // this.openCallInProgressModal = false;
+    this.openCallInProgressModal = false;
   };
 
   handleIncomingCall(call: Call) {
@@ -175,6 +211,7 @@ export default class WaitingCall extends Vue {
   handleIncomingCallDisconnect() {
     console.log("The call has been disconnected.");
   }
+
   handleIncomingCallAccept() {
     console.log("The call has been accepted.");
   }
@@ -201,11 +238,12 @@ export default class WaitingCall extends Vue {
 
   async deviceDisconnect() {
     this.device?.destroy();
+    this.identity = "Unknown";
   }
 
   async initializeDevice(data: any) {
     const { token, identity } = data;
-
+    this.identity = identity;
     this.device = new Device(token);
 
     this.device.on("tokenWillExpire", async () => {
@@ -263,6 +301,31 @@ export default class WaitingCall extends Vue {
     this.openIncomingModal = true;
     console.log("Incoming Call", call);
   };
+
+  startTimer() {
+    this.timer.intervalId = setInterval(() => {
+      this.timer.seconds++;
+      if (this.timer.seconds >= 60) {
+        this.timer.minutes++;
+        this.timer.seconds = 0;
+      }
+      if (this.timer.minutes >= 60) {
+        this.timer.hours++;
+        this.timer.minutes = 0;
+      }
+      const { hours, minutes, seconds } = this.timer;
+      this.timer.formatted = `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }, 1000);
+  }
+
+  resetTimer() {
+    this.timer.hours = 0;
+    this.timer.minutes = 0;
+    this.timer.seconds = 0;
+    clearInterval(this.timer.intervalId);
+  }
 }
 </script>
 
