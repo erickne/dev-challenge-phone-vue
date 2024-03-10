@@ -1,4 +1,4 @@
-# aloware-challenge-vue
+# challenge-vue
 
 ## Project setup
 ```
