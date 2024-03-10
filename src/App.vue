@@ -5,7 +5,7 @@
     </router-link>
     <a-divider type="vertical" />
     <router-link to="/ready">
-      <a-button type="primary">Ready</a-button>
+      <a-button type="primary">Phone</a-button>
     </router-link>
   </nav>
   <router-view />
