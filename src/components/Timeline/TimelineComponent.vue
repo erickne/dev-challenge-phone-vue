@@ -1,6 +1,6 @@
 <template>
   <a-space direction="vertical" class="left-aligned-items">
-    <span v-for="(item, index) in timelineData" :key="index">
+    <span v-for="(item, index) in reversedTimelineData" :key="index">
       <a-badge :status="item.type || 'default'" :text="format(item)" />
     </span>
   </a-space>
@@ -13,7 +13,7 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, watch, computed } from "vue";
 import { TimelineItem } from "@/components/Timeline/TimelineInterface.vue";
 
 function format(item: TimelineItem): string {
@@ -29,6 +29,23 @@ export default defineComponent({
   },
   methods: {
     format,
+  },
+  setup(props) {
+    watch(
+      () => props.timelineData,
+      () => {
+        // This function will run whenever `timelineData` changes
+        console.log("timelineData has changed", props.timelineData);
+      }
+    );
+
+    const reversedTimelineData = computed(() =>
+      [...props.timelineData].reverse()
+    );
+
+    return {
+      reversedTimelineData,
+    };
   },
 });
 </script>
