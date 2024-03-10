@@ -1,8 +1,5 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <WaitingCall />
-  </div>
+  <WaitingCall />
 </template>
 
 <script lang="ts">
