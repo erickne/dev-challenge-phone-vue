@@ -1,7 +1,8 @@
 <template>
   <div class="home">
     <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+    <a-typography-title level="3"> Welcome to InPhone </a-typography-title>
+    <a-typography-paragraph> dev-challenge </a-typography-paragraph>
   </div>
 </template>
 
