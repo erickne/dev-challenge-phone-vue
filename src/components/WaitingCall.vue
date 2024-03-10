@@ -16,6 +16,7 @@
               type="primary"
               @click="deviceConnect"
               v-if="status !== 'Online'"
+              :loading="status === 'Registering...'"
             >
               Connect
             </a-button>

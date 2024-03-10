@@ -57,13 +57,12 @@ export default class HistoryCall extends Vue {
   async getCallList() {
     const url = `http://127.0.0.1:8000/api/calls`;
     const { data } = await axios.get(url);
-    console.log(data);
     this.calls = data;
   }
 
   formatDate(value: string) {
     if (value) {
-      return moment(String(value)).format("MM/DD/YYYY hh:mm");
+      return moment(String(value)).format("MM/DD/YYYY HH:mm:ss");
     }
   }
 
@@ -72,24 +71,3 @@ export default class HistoryCall extends Vue {
   }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-h3 {
-  margin: 40px 0 0;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
-</style>
